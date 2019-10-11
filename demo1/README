@@ -1,0 +1,65 @@
+# go-micro 微服务
+
+此文是 go-micro 微服务专栏的开篇，主要是环境搭建和跑起官方例子。
+
+## go-micro + etcd集群
+
+下面是官方小例子，但是呢，我提供脚本给你，实现一键搭建+运行，全程爽歪歪！
+
+环境：
+
+- go1.12
+- go mod
+
+
+运行顺序:
+
+- 0）下载[etcd二进制包](https://github.com/etcd-io/etcd/releases)，设置etcd环境变量(例如在~/.bashrc ```export ETCD_HOME=/home/liangjf/app/etcd-v3.3.13-linux-amd64```)
+- 1）```./build_etcd.sh```
+- 2）```./start_cluster.sh```
+- 3）进入项目源码```server```目录，```go run server.go```
+- 4）进入项目源码```client```目录，```go run client.go```
+
+## 注意点:
+
+### ```go mod tidy```时，下载此包失败```github.com/gogo/protobuf v0.0.0-20190410021324-65acae22fc9```
+使用（1）下载失败了，然后换为（2）成功了
+
+- （1）`````#export GOPROXY=https://goproxy.cn`````
+- （2）```export GOPROXY=http://mirrors.aliyun.com/goproxy/```
+
+
+
+### go-micro注册etcd用于注册发现服务
+
+    reg := etcdv3.NewRegistry(func(op *registry.Options) {
+		op.Addrs = []string{
+			"http://172.16.7.16:9002",
+			"http://172.16.7.16:9004",
+			"http://172.16.7.16:9006",
+		}
+	})
+
+	service := micro.NewService(
+		micro.Name("greeter"),
+		micro.Registry(reg),
+	)
+
+### 服务名字一致
+
+    micro.Name("greeter"),
+
+### go.mod自定义包依赖
+
+    module demo1
+    
+    go 1.12
+    
+    require (
+        github.com/golang/protobuf v1.3.2
+        github.com/micro/go-micro v1.11.1
+        github.com/micro/go-plugins v1.3.0
+        go-micro_demo v0.0.0
+    )
+    
+    replace go-micro_demo v0.0.0 => ./
